@@ -9,60 +9,68 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.StringTokenizer;
+import java.io.File;
+import java.util.Scanner;
 
 public class Ex1 {
 
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
 
-        File file = new File("alarmNet.xml");
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse(file);
-        document.getDocumentElement().normalize();
+        Scanner scanner = new Scanner(System.in);  // Create a Scanner object
+        System.out.println("Enter xml name");
+        String XML_name = scanner.nextLine();
+        System.out.println("enter Querys");
+        String querys = scanner.nextLine();
+        BaseNet B = new BaseNet (XML_name);
+        ArrayList<EventNode> query_and_evedent = new ArrayList<>();
+        ArrayList<Integer> components =new ArrayList<>();
+        char numFanction = querys.charAt(querys.length()-1);
 
-        ArrayList<EventNode> events = new ArrayList<>();// מערך של האובייקטים
+        querys = querys.substring(0,querys.length()-3);
+/// הוספה של משתנה הקווארי לאריי ליסט
+        String name_query = querys.substring(2,3);
 
-        // קולטים את המאורעות
-        NodeList varList = document.getElementsByTagName("VARIABLE");
-
-        for (int i = 0; i < varList.getLength(); i++) // מעבר על כל המאורעות
-        {
-            Node var = varList.item(i);
-
-            if (var.getNodeType() == Node.ELEMENT_NODE) {
-                Element varElement = (Element) var;
-                String s = varElement.getElementsByTagName("NAME").item(0).getTextContent();
-
-                EventNode e = new EventNode(); // יוצרת נואוד חדש למאורע
-                e.setName(s);
-                events.add(e);
-                for (int j = 0; j < varElement.getElementsByTagName("OUTCOME").getLength(); j++) {
-                    String s2 = varElement.getElementsByTagName("OUTCOME").item(j).getTextContent();
-
-                    e.getOutcoms(s2); // מוסיפה לנואוד את האוטוקאם
+        for(int i=0; i<B.getEvents().size();i++) {
+            if(B.getEvents().get(i).getName().equals(name_query)){
+                query_and_evedent.add(B.getEvents().get(i));
+                String StringtoAdd = querys.substring(2+2,3+2);
+                int toAdd = B.getEvents().get(i).hashValue(StringtoAdd);
+                components.add(toAdd);
+                break;
+            }
+        }
+        /// הוספה של משתני האווידנס לאריי ליסט
+        for(int i =6; i<querys.length()-1;i=i+4) {   //P(B=T|J=T,M=T),1
+            String name_evidence = querys.substring(i,i+1);
+            for(int j=0; j<B.getEvents().size();j++) {
+                if (B.getEvents().get(j).getName().equals(name_evidence)) {
+                    query_and_evedent.add(B.getEvents().get(j));
+                    String stringtoAdd = querys.substring(i+2,i+3);
+                    System.out.println(stringtoAdd);
+                    int toAdd = B.getEvents().get(j).hashValue(stringtoAdd);
+                    components.add(toAdd);
+                    break;
                 }
             }
         }
-
-
-        NodeList defList = document.getElementsByTagName("DEFINITION");
-
-        for (int i = 0; i < defList.getLength(); i++) // מעבר על כל הטבלאות
-        {
-            Node def = defList.item(i);
-
-            if (def.getNodeType() == Node.ELEMENT_NODE) {
-                Element defElement = (Element) def;
-                for (int j = 0; j < defElement.getElementsByTagName("GIVEN").getLength(); j++) {
-                    String s2 = defElement.getElementsByTagName("GIVEN").item(j).getTextContent();
-                    events.get(i).getPerents().add(s2); // מוסיפה הורים
-                }
-                String s2 = defElement.getElementsByTagName("TABLE").item(0).getTextContent();
-                events.get(i).getCPT().add(s2); // מוסיפה הורים
+        System.out.println("query and evidence: "+query_and_evedent + "numFanction: "+numFanction);
+        if(numFanction=='1' ){
+            double div =0;
+            double mone = B.function1(query_and_evedent,components);
+            System.out.println("mone"+ mone);
+            for(int i=0;i<query_and_evedent.get(0).getOutcomsSize();i++){
+                components.set(0,i);
+               div+= B.function1(query_and_evedent,components);
+                System.out.println("q"+i+" "+ div);
             }
+            System.out.println("********************");
+            System.out.println(mone/div);
         }
-        System.out.println(events);
-    }
+
+        }
 }
+
 
 
