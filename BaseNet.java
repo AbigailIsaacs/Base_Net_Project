@@ -82,46 +82,36 @@ public class BaseNet {
 
     }
     //****************** calculateQustion
-    public double function1 (ArrayList<EventNode> query_and_evedent, ArrayList<Integer> components) {
+    public double [] function1 (ArrayList<EventNode> query_and_evedent, ArrayList<Integer> components) {
         double ans=0;
+        int numOfPlus =0;
+        double [] toReturn = new double [3];
+        double [] fronCalc;
+        int numMultiplcations =0;
         ArrayList<EventNode> allNodes = appendNodes(query_and_evedent,getHidden(query_and_evedent));
         int[][] options = options(query_and_evedent); // מחזיר מערך עם כל האופציות
-        System.out.println(Arrays.deepToString(options));
+
         for(int i=0;i<options.length;i++) {//מעבר על כל השורות
             int [] arr = new int[options[0].length];
             for (int j=0;j<options[0].length;j++){
                 arr[j] = options[i][j];
             }
             ArrayList<Integer> allComponents = appendComponents(components,arr);
-            System.out.println("allComponents " +allComponents);
-            ans+= calc(allNodes, allComponents); // שולח לפונקציה חישוב
-        }
-        return ans;
-    }
 
-    public ArrayList<Integer> appendComponents(ArrayList<Integer> components, int[] option) {
-        ArrayList<Integer> allcomponents = new ArrayList<>();
-        for (int i=0 ; i<components.size();i++){
-            allcomponents.add(components.get(i));
+            fronCalc =calc(allNodes, allComponents); // שולח לפונקציה חישוב
+            ans+= fronCalc[0];
+            numOfPlus++;
+            numMultiplcations += fronCalc[1];
         }
-        for (int i=0 ; i<option.length;i++){
-            allcomponents.add(option[i]);
-        }
-        return allcomponents;
+        toReturn[0] = ans;
+        toReturn[1] = numOfPlus-1;
+        toReturn [2] = numMultiplcations;
+        return toReturn;
     }
-
-    public ArrayList<EventNode> appendNodes(ArrayList<EventNode> query_and_evedent, ArrayList<EventNode> hidden){
-        ArrayList<EventNode> appendNodes = new ArrayList<>();
-        for (int i=0; i<query_and_evedent.size();i++) {
-            appendNodes.add(query_and_evedent.get(i));
-        }
-        for (int i=0; i<hidden.size();i++){
-            appendNodes.add(hidden.get(i));
-        }
-        return appendNodes;
-    }
-    public double calc (ArrayList<EventNode> allNodes,ArrayList<Integer> allComponents) {
+    public double [] calc (ArrayList<EventNode> allNodes,ArrayList<Integer> allComponents) {
+        double [] toReturn = new double [2];
         double ans =1;
+        int numMultiplcations =0;
         for(int i=0; i<allNodes.size();i++){ // מעבר על כל מאורע
             int colum = allComponents.get(i);
             int row =0 ;
@@ -129,21 +119,23 @@ public class BaseNet {
             for (int j=0 ; j<allNodes.get(i).getPerents().size();j++){ //   מעבר על כל ההורים של המאורע
                 EventNode perent = allNodes.get(i).getPerents().get(j);
                 int petentComponent =0;
-                for(int k=0;k<allNodes.size();k++){ // to fined the index of the perent
+                for(int k=0;k<allNodes.size();k++){ // to find the index of the perent
                     if(perent.getName().equals(allNodes.get(k).getName())){
                         petentComponent = allComponents.get(k);
                     }
                 }
                 divide= divide*(perent.getOutcomsSize());
-                int d = allNodes.get(i).createCPT().length ;
-                row = row + (petentComponent*(d/divide)) ;
+                int rowsOfQuery = allNodes.get(i).createCPT().length ;
+                row = row + (petentComponent*(rowsOfQuery/divide)) ;
             }
             double tableTA = (allNodes.get(i).getCptTable())[row][colum];
-            System.out.println("tableTA "+ tableTA);
-            ans = ans *tableTA;
+
+            ans = ans *tableTA ;
+            numMultiplcations++;
         }
-        System.out.println("ans q ------- "+ ans);
-        return ans;
+        toReturn[0] = ans;
+        toReturn[1]= numMultiplcations-1 ;
+        return toReturn;
     }
 
 
@@ -163,7 +155,7 @@ public class BaseNet {
                 arr_options[j][i] = input;
             }
         }
-        System.out.println(Arrays.deepToString(arr_options));
+
         return arr_options;
         }
     private int getNumOfOptions(ArrayList<EventNode> hidden) {
@@ -200,7 +192,26 @@ public class BaseNet {
         }
         return s;
     }
-
+    public ArrayList<Integer> appendComponents(ArrayList<Integer> components, int[] option) {
+        ArrayList<Integer> allcomponents = new ArrayList<>();
+        for (int i=0 ; i<components.size();i++){
+            allcomponents.add(components.get(i));
+        }
+        for (int i=0 ; i<option.length;i++){
+            allcomponents.add(option[i]);
+        }
+        return allcomponents;
+    }
+    public ArrayList<EventNode> appendNodes(ArrayList<EventNode> query_and_evedent, ArrayList<EventNode> hidden){
+        ArrayList<EventNode> appendNodes = new ArrayList<>();
+        for (int i=0; i<query_and_evedent.size();i++) {
+            appendNodes.add(query_and_evedent.get(i));
+        }
+        for (int i=0; i<hidden.size();i++){
+            appendNodes.add(hidden.get(i));
+        }
+        return appendNodes;
+    }
 
 }
 
