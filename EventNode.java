@@ -3,21 +3,38 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashMap;
 
+/**
+ * class members -
+ * name - is the name of the event
+ * outcomes - the values (for example {T=0} {F=1} {V3=2})
+ * parents - the parents of an eventNode (the <GIVEN> tag)
+ * CPT - the cpt table as an array list
+ * cptTable - is the cpt as a matrix
+ */
 public class EventNode {
     String name ;
-    HashMap<String, Integer> outcoms;
-    ArrayList<EventNode> perents ;
+    HashMap<String, Integer> outcomes;
+    ArrayList<EventNode> parents ;
     ArrayList<Double> CPT;
     double cptTable[][];
 
+    /**
+     * constructor
+     */
     public EventNode(){
        this.name = "";
-       perents = new ArrayList<>();
+        parents = new ArrayList<>();
        CPT = new ArrayList<>();
-       outcoms = new HashMap<String, Integer>();
+        outcomes = new HashMap<String, Integer>();
     }
+
+    /**
+     *
+     * @param key
+     * @return the value of the outcome (for example {T=0} {F=1} {V3=2})
+     */
     public int hashValue(String key){
-        return outcoms.get(key);
+        return outcomes.get(key);
     }
     public void setName(String s) {
         this.name = s;
@@ -26,29 +43,25 @@ public class EventNode {
         return this.name;
     }
 
-    public HashMap<String, Integer> getOutcoms() {
-        return outcoms;
+    public HashMap<String, Integer> getOutcomes() {
+        return outcomes;
     }
 
-    public int getOutcomsSize(){
-        return outcoms.size();
-    }
-
-    public HashMap<String, Integer> GetOutcoms() {
-        return this.outcoms;
+    public int getOutcomesSize(){
+        return outcomes.size();
     }
 
     public String toString(){
-        String perentsNames ="[";
-        for (int i=0; i<(perents.size());i++){
-            perentsNames = perentsNames +perents.get(i).getName()+", ";
+        String parentsNames ="[";
+        for (int i=0; i<(parents.size());i++){
+            parentsNames = parentsNames +parents.get(i).getName()+", ";
         }
-        perentsNames =perentsNames+ "]";
-        return "name:" + this.name + " outcoms:" + outcoms+ " perents:" + perentsNames + " CPT:"+ CPT;
+        parentsNames =parentsNames+ "]";
+        return "name:" + this.name + " outcomes:" + outcomes+ " parents:" + parentsNames + " CPT:"+ CPT;
     }
 
-    public ArrayList<EventNode> getPerents() {
-        return perents;
+    public ArrayList<EventNode> getParents() {
+        return parents;
     }
     public ArrayList<Double> getCPT(){
         return CPT;
@@ -56,13 +69,18 @@ public class EventNode {
     public double [][] getCptTable(){
         return cptTable;
     }
+
+    /**
+     * creates a CPT table
+     * @return cptTable
+     */
     public double [][] createCPT() {
-        int numOfColomns = outcoms.size();
+        int numOfColumns = outcomes.size();
         int numOfRowes = 1;
-        for (int i=0; i<perents.size(); i++) {
-            numOfRowes =numOfRowes *(perents.get(i).getOutcomsSize());
+        for (int i=0; i<parents.size(); i++) {
+            numOfRowes =numOfRowes *(parents.get(i).getOutcomesSize());
         }
-        double [][] cpt = new double[numOfRowes][numOfColomns];
+        double [][] cpt = new double[numOfRowes][numOfColumns];
         int index = 0;
             for (int i = 0 ; i< cpt.length; i++){
                 for (int j=0; j< cpt[0].length;j++){

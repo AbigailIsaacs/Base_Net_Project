@@ -13,10 +13,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
+/**
+ * class members -
+ * events - all the events in the Bayesian network
+ * name_XML
+ */
 public class BaseNet {
     ArrayList<EventNode> events ;// מערך של כל המאורעות
     String name_XML ;
 
+    /**
+     * constructor -
+     * initialize events by using readXML() function
+     */
     public BaseNet(String nameXML) throws ParserConfigurationException, IOException, SAXException {
         this.name_XML = nameXML;
         events = readXML(nameXML);
@@ -46,7 +55,7 @@ public class BaseNet {
                 // HashMap<String, Integer> outcomes = new HashMap<String, Integer>();
                 for (int j = 0; j < varElement.getElementsByTagName("OUTCOME").getLength(); j++) {
                     String outcome = varElement.getElementsByTagName("OUTCOME").item(j).getTextContent();
-                    e.GetOutcoms().put(outcome, j);//  מוסיפה לנואוד את האוטוקאם
+                    e.getOutcomes().put(outcome, j);//  מוסיפה לנואוד את האוטוקאם
 
                 }
             }
@@ -61,9 +70,10 @@ public class BaseNet {
                 for (int j = 0; j < defElement.getElementsByTagName("GIVEN").getLength(); j++) {
                     String name = defElement.getElementsByTagName("GIVEN").item(j).getTextContent();
                     // מעבר על המערך של המאועות עד למציאת האבא והוספתו למערך האבות של המשתנה
+                    // finds the parent eventNode
                     for (int k = 0; k < events.size(); k++) {
                         if (events.get(k).getName().equals(name)) {
-                            events.get(i).getPerents().add(events.get(k)); // מוסיפה הורים
+                            events.get(i).getParents().add(events.get(k)); // adding the parents
                         }
                     }
                 }
@@ -71,7 +81,7 @@ public class BaseNet {
                 StringTokenizer cptNumbers = new StringTokenizer(numbers);
                 while (cptNumbers.hasMoreTokens()) {
                     double num = Double.parseDouble(cptNumbers.nextToken());
-                    events.get(i).getCPT().add(num);// מוסיפה את המספרים
+                    events.get(i).getCPT().add(num);// adding the cpt numbers
                 }
             }
         }
@@ -86,22 +96,22 @@ public class BaseNet {
         double ans=0;
         int numOfPlus =0;
         double [] toReturn = new double [3];
-        double [] fronCalc;
+        double [] fromCalc;
         int numMultiplcations =0;
         ArrayList<EventNode> allNodes = appendNodes(query_and_evedent,getHidden(query_and_evedent));
         int[][] options = options(query_and_evedent); // מחזיר מערך עם כל האופציות
 
         for(int i=0;i<options.length;i++) {//מעבר על כל השורות
-            int [] arr = new int[options[0].length];
-            for (int j=0;j<options[0].length;j++){
+            int [] arr = new int[options[0].length]; // פותחת מערך בגודל של שורה
+            for (int j=0;j<options[0].length;j++){ // מעתיקה את השורה במערך
                 arr[j] = options[i][j];
             }
             ArrayList<Integer> allComponents = appendComponents(components,arr);
 
-            fronCalc =calc(allNodes, allComponents); // שולח לפונקציה חישוב
-            ans+= fronCalc[0];
+            fromCalc =calc(allNodes, allComponents); // שולח לפונקציה חישוב
+            ans+= fromCalc[0];
             numOfPlus++;
-            numMultiplcations += fronCalc[1];
+            numMultiplcations += fromCalc[1];
         }
         toReturn[0] = ans;
         toReturn[1] = numOfPlus-1;
@@ -124,25 +134,25 @@ public class BaseNet {
     public double [] calc (ArrayList<EventNode> allNodes,ArrayList<Integer> allComponents) {
         double [] toReturn = new double [2]; //
         double ans =1;
-        int numMultiplcations =0;
+        int numMultiplcations  =0;
         for(int i=0; i<allNodes.size();i++){ // מעבר על כל מאורע
             int colum = allComponents.get(i);
             int row =0 ;
             int divide =1;
-            for (int j=0 ; j<allNodes.get(i).getPerents().size();j++){ //   מעבר על כל ההורים של המאורע
-                EventNode perent = allNodes.get(i).getPerents().get(j);
-                int petentComponent =0;
-                for(int k=0;k<allNodes.size();k++){ // to find the index of the perent
-                    if(perent.getName().equals(allNodes.get(k).getName())){
-                        petentComponent = allComponents.get(k);
+            for (int j=0 ; j<allNodes.get(i).getParents().size();j++){ //   מעבר על כל ההורים של המאורע
+                EventNode parent = allNodes.get(i).getParents().get(j); //
+                int parentComponent =0;
+                for(int k=0;k<allNodes.size();k++){ // to find the index of the parent
+                    if(parent.getName().equals(allNodes.get(k).getName())){
+                        parentComponent = allComponents.get(k);
+                        break;
                     }
                 }
-                divide= divide*(perent.getOutcomsSize());
-                int rowsOfQuery = allNodes.get(i).createCPT().length ;
-                row = row + (petentComponent*(rowsOfQuery/divide)) ;
+                divide= divide*(parent.getOutcomesSize());
+                int rowsOfQuery = allNodes.get(i).getCptTable().length ;
+                row = row + (parentComponent*(rowsOfQuery/divide)) ;
             }
             double tableTA = (allNodes.get(i).getCptTable())[row][colum];
-
             ans = ans *tableTA ;
             numMultiplcations++;
         }
@@ -160,7 +170,7 @@ public class BaseNet {
         // puting data in the matrix
         int jumps = NumOfOptions;
         for (int i=0; i<hidden.size(); i++){
-            int numOutcoms = hidden.get(i).getOutcoms().size();
+            int numOutcoms = hidden.get(i).getOutcomes().size();
             jumps = jumps/ numOutcoms; //6
             int input = 0;
             for ( int j=0;j<NumOfOptions;j++){
@@ -174,7 +184,7 @@ public class BaseNet {
     private int getNumOfOptions(ArrayList<EventNode> hidden) {
         int sum =1;
         for (int i=0; i<hidden.size();i++){
-            sum= sum*(hidden.get(i).getOutcomsSize());
+            sum= sum*(hidden.get(i).getOutcomesSize());
         }
         return sum;
     }
