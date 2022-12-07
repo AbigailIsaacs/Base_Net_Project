@@ -58,34 +58,17 @@ public class Ex1 {
                     }
                 }
             }
+
             if(numFanction=='1' )
             {
-                boolean isPerent=false;
-                int countNumOfPerents=0;
-                for (int i=1 ; i<query_and_evedent.size();i++) { // finds if the query question is already in the table
-                    isPerent=false;
-                    for (int j = 0; j < query_and_evedent.get(0).getPerents().size(); j++) { // goes threw the query perents
-                        if (query_and_evedent.get(i).getName().equals(query_and_evedent.get(0).getPerents().get(j).getName())) {
-                            isPerent=true; //
-                            countNumOfPerents++;
-                            break;
-                        }
-                    }
-                    if (!isPerent){
-                        break;
-                    }
-                }
-                if(!isPerent|| countNumOfPerents!=query_and_evedent.get(0).getPerents().size()) // asks if the query question is already in the table
-                {
-                    /* a formula to find the cell in the table -
-                     the component of event1 * num of rows in the query table/number of components that event1 has +
-                     the component of event2 * num of rows in the query table/number of components that event2 has *number of components that event2 has +
-                     the component of event3 * num of rows in the query table/number of components that event1 * event2 * event3......
+                if(!isInTable(query_and_evedent)) { // if the answer to the question is *not* already in the table
+                    /* n
+                   double mone - for the normalization this is the answer to P(A,B,C,D,E)
+                   double div - is P(A,B,C,D,E)+ P(-A,B,C,D,E) + ....
                     */
-
                     double [] ans;
                     double [] temp;
-                    ans =  B.function1(query_and_evedent, components);
+                    ans =  B.function1(query_and_evedent, components);//P(D1=F|C1=T,C2=v1,C3=T,A1=T),1
                     double mone = ans[0];
                     double div = mone;
                     for (int i = 1; i < query_and_evedent.get(0).getOutcomsSize(); i++)
@@ -96,29 +79,61 @@ public class Ex1 {
                         ans[1]+=temp[1];
                         ans[2]+=temp[2];
                     }
-                    System.out.println("********************");
-                    ans[0] = mone / div;
+                    System.out.println("********************"); //P(B0=v3|C3=T,B2=F,C2=v3),1
+                    ans[0] = mone / div; //normalization
                     ans[1]+= query_and_evedent.get(0).getOutcomsSize()-1;
                     System.out.println("answer =" +ans[0]+" num plus= "+  ans[1]+ "num multy"+  ans[2]);
                 }
                 else // the case when the answer is in the query table we will do the same formula
                 {
-                    int colum = components.get(0);
-                    int row =0;
-                    int div =1;
-                    int rowsOfQuery = query_and_evedent.get(0).getCptTable().length ;
-                    for (int i=1;i<query_and_evedent.size();i++)  //goes threw all the events
-                    {
-                        div*= query_and_evedent.get(i).getOutcomsSize();
-                        int a = components.get(i);
-                        row+= a*(rowsOfQuery/div);
-                    }
-                    double ans = (query_and_evedent.get(0).getCptTable())[row][colum]; //P(D1=T|C2=v1,C3=F),1
+                    double [] ans = new double[3];
+                    ans[0] = getTA(query_and_evedent,components);
+                    ans[1]=0;
+                    ans[2]=0;
                     System.out.println("##################");
-                    System.out.println(ans);
+                    System.out.println("answer =" +ans[0]+" num plus= "+  ans[1]+ "num multy"+  ans[2]);
                 }
             }
         }
+    }
+
+    public static double getTA(ArrayList<EventNode> query_and_evedent,ArrayList<Integer> components){
+        double ans;
+        int colum = components.get(0);
+        int row =0;
+        int div =1;
+        int rowsOfQuery = query_and_evedent.get(0).getCptTable().length ;
+        for (int i=1;i<query_and_evedent.size();i++)  //goes threw all the events
+        {
+            div*= query_and_evedent.get(i).getOutcomsSize();
+            int a = components.get(i);
+            row+= a*(rowsOfQuery/div);
+        }
+        ans = (query_and_evedent.get(0).getCptTable())[row][colum]; //P(D1=T|C2=v1,C3=F),1
+
+       return ans;
+    }
+    public static boolean isInTable(ArrayList<EventNode> query_and_evedent) {
+
+        boolean isPerent = false;
+        int countNumOfPerents = 0;
+        for (int i = 1; i < query_and_evedent.size(); i++) { // finds if the query question is already in the table
+            isPerent = false;
+            for (int j = 0; j < query_and_evedent.get(0).getPerents().size(); j++) { // goes threw the query perents
+                if (query_and_evedent.get(i).getName().equals(query_and_evedent.get(0).getPerents().get(j).getName())) {
+                    isPerent = true; //
+                    countNumOfPerents++;
+                    break;
+                }
+            }
+            if (!isPerent) {
+                return false;
+            }
+        }
+        if(countNumOfPerents!=query_and_evedent.get(0).getPerents().size()) { // asks if the events are all of the perents of the query
+            return false;
+        }
+        return true;
     }
 }
 

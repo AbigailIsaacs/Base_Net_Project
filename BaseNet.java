@@ -108,8 +108,21 @@ public class BaseNet {
         toReturn [2] = numMultiplcations;
         return toReturn;
     }
+    /* a formula to find the cell in the table -
+     the component of event1 * num of rows in the query table/number of components that event1 has +
+     the component of event2 * num of rows in the query table/number of components that event2 has *number of components that event2 has +
+     the component of event3 * num of rows in the query table/number of components that event1 * event2 * event3......
+    */
+
+    /**
+     * @param allNodes - all nods in the Bayesian  network
+     * @param allComponents - the components that we are cheking for
+     * @return arr[0] is the answer to the question P(A,B,C,-D-E)
+     *         arr[1] number of multiplications
+     */
+
     public double [] calc (ArrayList<EventNode> allNodes,ArrayList<Integer> allComponents) {
-        double [] toReturn = new double [2];
+        double [] toReturn = new double [2]; //
         double ans =1;
         int numMultiplcations =0;
         for(int i=0; i<allNodes.size();i++){ // מעבר על כל מאורע
