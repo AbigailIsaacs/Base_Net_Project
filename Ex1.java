@@ -58,8 +58,15 @@ public class Ex1 {
                         break;
                     }
                 }
+
             }
-            if(numFanction=='1' )
+            if(numFanction=='2') {
+                B.function2(query_and_evedent,components);
+            }
+
+            if(numFanction=='1' ) {
+            }
+
             {
                 if(!isInTable(query_and_evedent)) { // if the answer to the question is *not* already in the table
                     /* n
@@ -98,6 +105,7 @@ public class Ex1 {
                 }
             }
         }
+
     }
 
     public static double getTA(ArrayList<EventNode> query_and_evedent,ArrayList<Integer> components){
@@ -137,7 +145,9 @@ public class Ex1 {
             return false;
         }
         return true;
+
     }
+
 }
 
 

@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
@@ -9,9 +9,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.StringTokenizer;
 
 /**
  * class members -
@@ -21,6 +18,7 @@ import java.util.StringTokenizer;
 public class BaseNet {
     ArrayList<EventNode> events ;// מערך של כל המאורעות
     String name_XML ;
+    HashMap<String, EventNode> hashEvents = new HashMap<>();
 
     /**
      * constructor -
@@ -30,6 +28,7 @@ public class BaseNet {
         this.name_XML = nameXML;
         events = readXML(nameXML);
     }
+
 
     public ArrayList<EventNode> getEvents(){
         return events;
@@ -88,6 +87,11 @@ public class BaseNet {
         for (int i=0 ; i<events.size();i++){
             events.get(i).createCPT();
         }
+        for (int i=0;i<events.size();i++){
+            hashEvents.put(events.get(i).name, events.get(i));
+        }
+
+
         return events;
 
     }
@@ -117,6 +121,150 @@ public class BaseNet {
         toReturn[1] = numOfPlus-1;
         toReturn [2] = numMultiplcations;
         return toReturn;
+    }
+
+    public double [] function2 (ArrayList<EventNode> query_and_evedent, ArrayList<Integer> components){
+        double [] toReturn = new double [3];
+        ArrayList<Factor> factors=  createAllFactors();
+        elimnateAllEvedence(query_and_evedent,components,factors);
+        ArrayList<EventNode> hidden = getHidden(query_and_evedent);
+        hidden.sort((p1, p2) -> p1.getName().compareTo(p2.getName()));
+       // for (int i=0; i<hidden.size();i++){
+            ArrayList<Factor> factorEvent = cerateArrFactorsForHidden(hidden.get(2),factors);
+           // for (int j=0; j<factorEvent.size();j++){
+               // join(factorEvent.get(j),factorEvent.get(j+1));
+        System.out.println("F1 -"+ factorEvent.get(0));
+        System.out.println("F2 -"+ factorEvent.get(1));
+            join(factorEvent.get(0),factorEvent.get(1));
+
+           // }
+       // }
+
+        return toReturn;
+    }
+    public void join (Factor factor1,Factor factor2) {
+        ArrayList<EventNode> allNodesForJoin = new ArrayList<>();
+        ArrayList<String> factor_name = new ArrayList<>();
+
+        for (int i = 0; i < factor1.factor_name.size(); i++) {
+            allNodesForJoin.add(hashValue(factor1.factor_name.get(i)));
+            factor_name.add(hashValue(factor1.factor_name.get(i)).name);
+        }
+        boolean b = true;
+        for (int i = 0; i < factor2.factor_name.size(); i++) {
+            b = true;
+            for (int j = 0; j < factor1.factor_name.size(); j++) {
+                if (factor2.factor_name.get(i).equals(factor1.factor_name.get(j))) {
+                    b= false;
+                }
+            }
+            if(b) {
+                allNodesForJoin.add(hashValue(factor2.factor_name.get(i)));
+                factor_name.add(hashValue(factor2.factor_name.get(i)).name);
+            }
+        }
+        System.out.println("all nodes "+allNodesForJoin);
+        int[][] options = optionsForF2(allNodesForJoin);
+        System.out.println("options length "+options.length);
+        ArrayList<Integer> F1Index = new ArrayList<>();
+        ArrayList<Integer> F2Index = new ArrayList<>();
+
+        ArrayList<EventNode> nodesF1 = new ArrayList<>();
+        ArrayList<EventNode> nodesF2 = new ArrayList<>();
+        for (int i = 0; i < allNodesForJoin.size(); i++) {
+            for (int j = 0; j < factor1.factor_name.size(); j++) {
+                if (factor1.factor_name.get(j).equals(allNodesForJoin.get(i).getName())) {
+                    F1Index.add(i);
+                    nodesF1.add(allNodesForJoin.get(i));
+                }
+            }
+            for (int j = 0; j < factor2.factor_name.size(); j++) {
+                if (factor2.factor_name.get(j).equals(allNodesForJoin.get(i).getName())) {
+                    F2Index.add(i);
+                    nodesF2.add(allNodesForJoin.get(i));
+                }
+            }
+        }
+        double NewFactor[] = new double[options.length];
+        int [] componentsF1 = new int[F1Index.size()];
+        int [] componentsF2 = new int[F2Index.size()];
+        for (int i = 0; i < options.length; i++) {
+            for (int j=0;j<options[0].length;j++) {
+                for (int k = 0; k < F1Index.size(); k++) {
+                    if (j == F1Index.get(k)) { // כלומר האם האינקס שייך לF1
+                        componentsF1[j] = options[i][j];
+
+                    }
+                }
+                for (int k = 0; k < F2Index.size(); k++) {
+                    if (j == F2Index.get(k)) { // כלומר האם האינקס שייך לF1
+                        componentsF2[j] = options[i][j];
+                    }
+                }
+            }
+            NewFactor[i] = (getTA(factor1,componentsF1,nodesF1)) * (getTA(factor2,componentsF2,nodesF2));
+        }
+        System.out.println("joined - " + Arrays.toString(NewFactor));
+    }
+    public double getTA(Factor factor,int[] components,ArrayList<EventNode> nodesF){
+        int ans =0;
+        double mone = factor.factor.length;
+        double div =1;
+        ArrayList<EventNode> NewnodesF = new ArrayList<>();
+        int [] newComponents = new int[components.length];
+        //nodesF סידור נכון של
+        for (int i = 0; i <factor.factor_name.size(); i++) {
+            for (int j = 0; j < nodesF.size(); j++) {
+                if(factor.factor_name.get(i).equals(nodesF.get(j).getName())){
+                    newComponents[i] = components[j];
+                }
+            }
+        }
+        for (int i = 0; i < nodesF.size(); i++) {
+            div =div * (hashValue(factor.factor_name.get(i)).getOutcomes().size());
+            ans += newComponents[i]*mone/div;
+        }
+        return factor.factor[ans];
+    }
+    public ArrayList<Factor> cerateArrFactorsForHidden(EventNode hidden,ArrayList<Factor>factors){
+        ArrayList<Factor> factorEvent = new ArrayList<>()  ;
+        for (int i=0; i<factors.size();i++){
+            for (int j=0;j<factors.get(i).factor_name.size();j++){
+                if(factors.get(i).factor_name.get(j).equals(hidden.getName())){
+                    factorEvent.add(factors.get(i));
+                    factors.remove(i);
+                    i--;
+                    break;
+                }
+            }
+
+        }
+
+        Collections.sort(factorEvent, Comparator.comparingInt(p -> p.getFactor().length));
+
+        return factorEvent;
+    }
+    public void elimnateAllEvedence(ArrayList<EventNode> query_and_evedent, ArrayList<Integer> components,ArrayList<Factor>factors){
+        for(int i=1; i<query_and_evedent.size();i++){ //עובר על כל משתני האווידנס
+            for (int j=0;j<factors.size();j++){ // עובר על כל הפקטורים
+                for (int k=0;k<factors.get(j).factor_name.size();k++){ //עובר על הנואודים שנמצאיםם בפקטור
+                    if (factors.get(j).factor_name.get(k).equals(query_and_evedent.get(i).name)){
+                        double[] newFactor = factors.get(j).eliminateEvidence(query_and_evedent.get(i),components.get(i));
+                        ArrayList<String> newName= factors.get(j).deleteEventName(query_and_evedent.get(i).name);
+                        factors.get(j).factor = newFactor;
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+    public ArrayList<Factor> createAllFactors(){
+        ArrayList<Factor> factors = new ArrayList();
+        for (int i=0;i<events.size();i++) {
+            factors.add(new Factor(this.events.get(i), this));
+        }
+        return factors;
     }
     /* a formula to find the cell in the table -
      the component of event1 * num of rows in the query table/number of components that event1 has +
@@ -163,6 +311,31 @@ public class BaseNet {
 
 
 //הפונקציה מחשבת את כל האופציות של המשתנים החבואים ומחזירה אותם במטריצה
+    private int getNumOfOptions(ArrayList<EventNode> hidden) {
+        int sum =1;
+        for (int i=0; i<hidden.size();i++){
+            sum= sum*(hidden.get(i).getOutcomesSize());
+        }
+        return sum;
+    }
+    public ArrayList<EventNode> getHidden(ArrayList<EventNode> query_and_evedent){
+        ArrayList<EventNode> hidden = new ArrayList<>();
+        boolean b = true;
+        for(int i =0; i< this.events.size(); i++){
+            for (int j=0 ; j<query_and_evedent.size();j++) {
+                if (events.get(i).getName().equals(query_and_evedent.get(j).getName())) {
+                    b = false;
+                }
+            }
+            if (b){
+                hidden.add(events.get(i));
+            }
+            b=true;
+        }
+
+        return hidden;
+    }
+
     public int[][] options (ArrayList<EventNode> query_and_evedent){
         ArrayList<EventNode> hidden = getHidden(query_and_evedent) ;
         int NumOfOptions = getNumOfOptions(hidden); //מחזיר את כמות הp() שצריך לעשות עם כל הקומבינציות של המשתנים החבואים
@@ -180,31 +353,6 @@ public class BaseNet {
         }
 
         return arr_options;
-        }
-    private int getNumOfOptions(ArrayList<EventNode> hidden) {
-        int sum =1;
-        for (int i=0; i<hidden.size();i++){
-            sum= sum*(hidden.get(i).getOutcomesSize());
-        }
-        return sum;
-    }
-
-    public ArrayList<EventNode> getHidden(ArrayList<EventNode> query_and_evedent){
-        ArrayList<EventNode> hidden = new ArrayList<>();
-        boolean b = true;
-        for(int i =0; i< this.events.size(); i++){
-            for (int j=0 ; j<query_and_evedent.size();j++) {
-                if (events.get(i).getName().equals(query_and_evedent.get(j).getName())) {
-                    b = false;
-                }
-            }
-            if (b){
-                hidden.add(events.get(i));
-            }
-            b=true;
-        }
-
-        return hidden;
     }
 
     public String toString(){
@@ -235,6 +383,27 @@ public class BaseNet {
         }
         return appendNodes;
     }
+    public EventNode hashValue(String key){
 
+        return hashEvents.get(key);
+    }
+
+    public int[][] optionsForF2 (ArrayList<EventNode> hidden) {
+        ;
+        int NumOfOptions = getNumOfOptions(hidden); //מחזיר את כמות הp() שצריך לעשות עם כל הקומבינציות של המשתנים החבואים
+        int[][] arr_options = new int[NumOfOptions][hidden.size()];
+        // puting data in the matrix
+        int jumps = NumOfOptions;
+        for (int i = 0; i < hidden.size(); i++) {
+            int numOutcoms = hidden.get(i).getOutcomes().size();
+            jumps = jumps / numOutcoms; //6
+            int input = 0;
+            for (int j = 0; j < NumOfOptions; j++) {
+                input = (j / jumps) % numOutcoms;
+                arr_options[j][i] = input;
+            }
+        }
+        return arr_options;
+    }
 }
 

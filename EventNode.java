@@ -18,13 +18,14 @@ public class EventNode {
     ArrayList<Double> CPT;
     double cptTable[][];
 
+
     /**
      * constructor
      */
     public EventNode(){
        this.name = "";
         parents = new ArrayList<>();
-       CPT = new ArrayList<>();
+        CPT = new ArrayList<>();
         outcomes = new HashMap<String, Integer>();
     }
 
@@ -34,6 +35,7 @@ public class EventNode {
      * @return the value of the outcome (for example {T=0} {F=1} {V3=2})
      */
     public int hashValue(String key){
+
         return outcomes.get(key);
     }
     public void setName(String s) {
@@ -45,6 +47,7 @@ public class EventNode {
 
     public HashMap<String, Integer> getOutcomes() {
         return outcomes;
+
     }
 
     public int getOutcomesSize(){
@@ -90,4 +93,5 @@ public class EventNode {
         cptTable = cpt ;
         return cpt;
     }
+
 }
