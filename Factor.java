@@ -12,6 +12,19 @@ public class Factor {
         factor_name = createFactorName(event);
         this.baseNet =baseNet;
     }
+
+    public Factor(ArrayList<String> name,double[] factorTable, BaseNet baseNet){
+        setFactor(factorTable);
+        setFactorName(name);
+        this.baseNet =baseNet;
+    }
+    public void setFactorName (ArrayList<String> factorName){
+
+        factor_name = factorName;
+    }
+    public void setFactor (double[] factorTable){
+        factor = factorTable;
+    }
     public double[] createFactor(EventNode event){
         int rows = event.getCptTable().length * event.getOutcomesSize() ;
         double [] factor = new double[rows];

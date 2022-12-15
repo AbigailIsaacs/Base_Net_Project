@@ -6,8 +6,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.StringTokenizer;
@@ -18,23 +18,20 @@ public class Ex1 {
 
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
 
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter xml name");
-        String XML_name = scanner.nextLine();
-        System.out.println("enter Querys");
 
+        BufferedReader br
+                = new BufferedReader(new FileReader("input"));
+        String XML_name = br.readLine();
         ArrayList<String> allQuerys = new ArrayList<>(); //string arraylist for all Querys
-        String query = scanner.nextLine();
-       // while (query!=endof file) {
+        String query = br.readLine();
+        while (query !=null) {
             allQuerys.add(query);
-            query = scanner.nextLine();
-       // }
-
+            query = br.readLine();
+        }
         BaseNet B = new BaseNet (XML_name); // baseNet new object
-
-        ArrayList<EventNode> query_and_evedent = new ArrayList<>();
-        ArrayList<Integer> components =new ArrayList<>();
         for (int k=0;k<allQuerys.size();k++){ // goes thru all Query's
+            ArrayList<EventNode> query_and_evedent = new ArrayList<>();
+            ArrayList<Integer> components =new ArrayList<>();
             String querys = allQuerys.get(k);
             char numFanction = querys.charAt(querys.length()-1); // brings the number of function
             querys = querys.substring(0,querys.length()-3); // cuts the three last unnesesery notes
@@ -58,16 +55,14 @@ public class Ex1 {
                         break;
                     }
                 }
-
             }
             if(numFanction=='2') {
-                B.function2(query_and_evedent,components);
+                double [] ans = B.function2(query_and_evedent,components);
+                System.out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
             }
 
             if(numFanction=='1' ) {
-            }
 
-            {
                 if(!isInTable(query_and_evedent)) { // if the answer to the question is *not* already in the table
                     /* n
                    double mone - for the normalization this is the answer to P(A,B,C,D,E)
@@ -89,10 +84,10 @@ public class Ex1 {
                             ans[2] += temp[2];
                         }
                     }
-                    System.out.println("********************"); //P(B0=v3|C3=T,B2=F,C2=v3),1
+
                     ans[0] = mone / (div+mone); //normalization
                     ans[1]+= query_and_evedent.get(0).getOutcomesSize()-1; //P(D1=F|C1=T,C2=v1,C3=T,A1=T),1
-                    System.out.println("answer =" +ans[0]+" num plus= "+  ans[1]+ "num multy"+  ans[2]);
+                    System.out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
                 }
                 else // the case when the answer is in the query table we will do the same formula
                 {
@@ -100,8 +95,7 @@ public class Ex1 {
                     ans[0] = getTA(query_and_evedent,components);
                     ans[1]=0;
                     ans[2]=0;
-                    System.out.println("##################");
-                    System.out.println("answer =" +ans[0]+" num plus= "+  ans[1]+ "num multy"+  ans[2]);
+                    System.out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
                 }
             }
         }
