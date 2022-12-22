@@ -64,18 +64,21 @@ public class BaseNet {
         return toReturn;
     }
 
-    public double [] function2 (ArrayList<EventNode> query_and_evedent, ArrayList<Integer> components){
+    public double [] function2 (ArrayList<EventNode> query_and_evedent, ArrayList<Integer> components,int fanction){
         double [] toReturn = new double [3];
         ArrayList<EventNode> hiddenAncestor = getAncestor(query_and_evedent);
         ArrayList<Factor> factors=  createAllFactors(hiddenAncestor);
         for (int i = 0; i < query_and_evedent.size(); i++) { // deleting query_and_evedent from hiddenAncestor
             hiddenAncestor.remove(0);
         }
-
         elimnateAllEvedence(query_and_evedent,components,factors);
-
-        hiddenAncestor.sort((p1, p2) -> p1.getName().compareTo(p2.getName()));
+        if(fanction==2) {
+            hiddenAncestor.sort((p1, p2) -> p1.getName().compareTo(p2.getName()));
+        }
         for (int i=0; i<hiddenAncestor.size();i++){
+            if(fanction==3){
+                hiddenAncestor = reOrderF3(factors,hiddenAncestor,query_and_evedent);
+            }
             ArrayList<Factor> factorEvent = cerateArrFactorsForHidden(hiddenAncestor.get(i),factors);
 
             while (factorEvent.size()>=2){
@@ -126,6 +129,42 @@ public class BaseNet {
         toReturn[0] = correctComponent/sum;
         return toReturn;
     }
+
+    private ArrayList<EventNode> reOrderF3(ArrayList<Factor> factors, ArrayList<EventNode> hiddenAncestor,ArrayList<EventNode> query_and_evedent) {
+        Collections.sort(factors, Comparator.comparingInt(p -> p.getFactor().length));
+        Factor bigest;
+        bigest = factors.get(factors.size()-1);
+        HashMap<Integer,EventNode> factorsOrder = new HashMap<>();
+        int minValue =0;
+        for (int i = 0; i < bigest.factor_name.size(); i++) {// עובר על הפקטור הגדול ביותר
+            int numOfOutcomes=1;
+            if(bigest.factor_name.size()==1){
+            }
+            else{
+                for (int j = 0; j < factors.size()-1; j++) {// עובר על כל שאר הפקטורים
+                    for (int k = 0; k < factors.get(j).factor_name.size(); k++) {// עובר על השם של פקטור ספציפי
+                        if(factors.get(j).factor_name.get(k).equals(bigest.factor_name.get(i))){
+
+                        }
+                        else{
+                            numOfOutcomes = numOfOutcomes* hashValue(factors.get(j).factor_name.get(k)).getOutcomesSize();
+                        }
+                    }
+                }
+                if(minValue==0 || minValue>numOfOutcomes)
+                    minValue = numOfOutcomes;
+            }
+            factorsOrder.put(numOfOutcomes ,hashValue(bigest.factor_name.get(i)));
+        }
+        for (int i = 0; i < hiddenAncestor.size(); i++) {
+            if(hiddenAncestor.get(i).equals(factorsOrder.get(minValue).name)){
+                hiddenAncestor.remove(i);
+                hiddenAncestor.add(0,factorsOrder.get(minValue));
+            }
+        }
+        return hiddenAncestor;
+    }
+
 
     private Factor eliminatHidden(Factor factor, EventNode hidden, double[] toReturn) {
         int len = factor.factor.length/hidden.getOutcomesSize();

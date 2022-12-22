@@ -13,12 +13,12 @@ import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.io.File;
 import java.util.Scanner;
-
+import java.io.PrintWriter; // Step 1
+import java.io.IOException;
 public class Ex1 {
 
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
-
-
+        PrintWriter out = new PrintWriter("output.txt");
         BufferedReader br
                 = new BufferedReader(new FileReader("input"));
         String XML_name = br.readLine();
@@ -57,13 +57,27 @@ public class Ex1 {
                 }
             }
             if(numFanction=='2') {
-                double [] ans = B.function2(query_and_evedent,components);
-                System.out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
+                if(isInTable(query_and_evedent)){
+                    double [] ans = new double[3];
+                    ans[0] = getTA(query_and_evedent,components);
+                    ans[1]=0;
+                    ans[2]=0;
+                    out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
+                }
+                else {
+                    double[] ans = B.function2(query_and_evedent, components, 2);
+                    out.println(String.format("%.5f", ans[0]) + "," + (int) ans[1] + "," + (int) ans[2]);
+                }
             }
+            if(numFanction=='3') {
+                double [] ans = B.function2(query_and_evedent,components,3);
+                out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
+            }
+
 
             if(numFanction=='1' ) {
 
-                if(!isInTable(query_and_evedent)) { // if the answer to the question is *not* already in the table
+                  if(!isInTable(query_and_evedent)) { // if the answer to the question is *not* already in the table
                     /* n
                    double mone - for the normalization this is the answer to P(A,B,C,D,E)
                    double div - is P(A,B,C,D,E)+ P(-A,B,C,D,E) + ....
@@ -87,7 +101,7 @@ public class Ex1 {
 
                     ans[0] = mone / (div+mone); //normalization
                     ans[1]+= query_and_evedent.get(0).getOutcomesSize()-1; //P(D1=F|C1=T,C2=v1,C3=T,A1=T),1
-                    System.out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
+                    out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
                 }
                 else // the case when the answer is in the query table we will do the same formula
                 {
@@ -95,11 +109,11 @@ public class Ex1 {
                     ans[0] = getTA(query_and_evedent,components);
                     ans[1]=0;
                     ans[2]=0;
-                    System.out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
+                    out.println(String.format("%.5f", ans[0])+","+  (int)ans[1]+ ","+  (int)ans[2]);
                 }
             }
         }
-
+        out.close();
     }
 
     public static double getTA(ArrayList<EventNode> query_and_evedent,ArrayList<Integer> components){
@@ -107,11 +121,24 @@ public class Ex1 {
         int column = components.get(0);
         int row =0;
         int div =1;
+        ArrayList<EventNode> ordered_query_and_evedent = new ArrayList<>();
+        ordered_query_and_evedent.add(query_and_evedent.get(0));
+        ArrayList<Integer> ordered_components = new ArrayList<>();
+        ordered_components.add(components.get(0));
+        for (int i = 0; i < query_and_evedent.get(0).getParents().size(); i++) {
+            for (int j = 1; j < query_and_evedent.size(); j++) {
+                if( (query_and_evedent.get(0).getParents().get(i).name.equals(query_and_evedent.get(j).getName()))){
+                    ordered_query_and_evedent.add(query_and_evedent.get(j));
+                    ordered_components.add(components.get(j));
+                }
+            }
+
+        }
         int rowsOfQuery = query_and_evedent.get(0).getCptTable().length ;
         for (int i=1;i<query_and_evedent.size();i++)  //goes threw all the events
         {
-            div*= query_and_evedent.get(i).getOutcomesSize();
-            int a = components.get(i);
+            div*= ordered_query_and_evedent.get(i).getOutcomesSize();
+            int a = ordered_components.get(i);
             row+= a*(rowsOfQuery/div);
         }
         ans = (query_and_evedent.get(0).getCptTable())[row][column]; //P(D1=T|C2=v1,C3=F),1
