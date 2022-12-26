@@ -7,10 +7,12 @@ public class Factor {
     ArrayList<String>  factor_name;
     BaseNet baseNet ;
 
+
     public Factor(EventNode event, BaseNet baseNet){
         factor = createFactor(event);
         factor_name = createFactorName(event);
         this.baseNet =baseNet;
+
     }
 
     public Factor(ArrayList<String> name,double[] factorTable, BaseNet baseNet){
@@ -56,6 +58,12 @@ public class Factor {
         return factor;
     }
 
+    /**
+     * eliminates an evidence from a certain factor
+     * @param evidence
+     * @param component
+     * @return
+     */
     public double[] eliminateEvidence(EventNode evidence, int component){
 
         int rows = this.factor.length/evidence.getOutcomesSize();
@@ -82,16 +90,6 @@ public class Factor {
         factor = newFactor;
         return factor;
     }
-    public ArrayList<String> deleteEventName(String event){
-        for (int i=0;i<factor_name.size();i++){
-            if (event.equals(factor_name.get(i))){
-                factor_name.remove(i);
-            }
-        }
-        return factor_name;
-    }
-
-
 
     public String toString(){
 

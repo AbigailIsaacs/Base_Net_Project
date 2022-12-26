@@ -17,7 +17,7 @@ public class EventNode {
     ArrayList<EventNode> parents ;
     ArrayList<Double> CPT;
     double cptTable[][];
-
+    int num_apper_in_factor;
 
     /**
      * constructor
@@ -27,6 +27,7 @@ public class EventNode {
         parents = new ArrayList<>();
         CPT = new ArrayList<>();
         outcomes = new HashMap<String, Integer>();
+        num_apper_in_factor =0;
     }
 
     /**
