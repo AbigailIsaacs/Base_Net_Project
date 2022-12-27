@@ -62,7 +62,7 @@ public class BaseNet {
         int numOfPlus =0;
         double [] toReturn = new double [3];
         double [] fromCalc;
-        int numMultiplcations =0;
+        int numMultiplications =0;
         ArrayList<EventNode> allNodes = appendNodes(query_and_evidence,getHidden(query_and_evidence));
         int[][] options = options(query_and_evidence); // returns a matrix where each row is a combination of the hidden variables
 
@@ -76,25 +76,33 @@ public class BaseNet {
             fromCalc =calc(allNodes, allComponents); // returns the answer to the query with the hidden variables value is in arr
             ans+= fromCalc[0];
             numOfPlus++;
-            numMultiplcations += fromCalc[1];
+            numMultiplications += fromCalc[1];
         }
         toReturn[0] = ans;
         toReturn[1] += numOfPlus-1;
-        toReturn [2] += numMultiplcations;
+        toReturn [2] += numMultiplications;
         return toReturn;
     }
 
     /**
-     * function2
+     * for "numFunction" =2 -
+     * The elimination order of the variables is according to the ABC order
+     * for "numFunction" =3 -
+     * The elimination of the variables is according to the total lengths of the factors in which
+     * the variable is found, from the smallest to the largest.
+     * In addition, when we reach a situation where all the tables in which the variable appears in
+     * consist only the variable itself, we can move on to the next variable because this means
+     * that the variable does not depend on the query variable.
+     *
      * @param query_and_evidence
      * @param components
-     * @param fanction
+     * @param function
      * @return an array size 3 :
      * toReturn[0] = the probability of the question
      * toReturn[1] = the number of connection operations.
      * toReturn[2] = the number of multiplication operations.
      */
-    public double [] function2 (ArrayList<EventNode> query_and_evidence, ArrayList<Integer> components,int fanction){
+    public double [] function2 (ArrayList<EventNode> query_and_evidence, ArrayList<Integer> components,int function){
         double [] toReturn = new double [3];
         ArrayList<EventNode> hiddenAncestor = getAncestor(query_and_evidence);
         ArrayList<Factor> factors=  createAllFactors(hiddenAncestor);
@@ -103,20 +111,20 @@ public class BaseNet {
         }
         // because we know the desired outcome of the Evidences we want to eliminate all the other outcomes
         eliminateAllEvidence(query_and_evidence,components,factors);
-        if(fanction==2) {
+        if(function==2) {
             // sorting the factors by there name
             hiddenAncestor.sort((p1, p2) -> p1.getName().compareTo(p2.getName()));
         }
-        if(fanction==3){
+        if(function==3){
             hiddenAncestor.sort((p1, p2) -> p1.getName().compareTo(p2.getName()));
             hiddenAncestor = appearsTheLeast(factors,hiddenAncestor);
         }
 
         for (int i=0; i<hiddenAncestor.size();i++){
             //creating an Array list of the factors that contains the event hiddenAncestor.get(i)
-            ArrayList<Factor> factorEvent = cerateArrFactorsForHidden(hiddenAncestor.get(i),factors);
+            ArrayList<Factor> factorEvent = createArrFactorsForHidden(hiddenAncestor.get(i),factors);
             Collections.sort(factorEvent, Comparator.comparingInt(p -> p.getFactor().length));
-            if(fanction==3){
+            if(function==3){
                 // in case that all the factors in factorEvent are consists only the Hidden event,
                 // then we know that it is not depending on the query or evidence
                 // therefore we don't need to calculate him.
@@ -141,7 +149,7 @@ public class BaseNet {
             }
 
             // eliminating the Hidden node
-            Factor newF  = eliminatHidden(factorEvent.get(0),(hiddenAncestor.get(i)),toReturn);
+            Factor newF  = eliminateHidden(factorEvent.get(0),(hiddenAncestor.get(i)),toReturn);
             if(newF.factor.length!=1) { // if the new factor is only one line we can delete it
                 factors.add(newF);
 
@@ -191,9 +199,9 @@ public class BaseNet {
                         }
                     }
                 }
-                hiddenAncestor.get(j).num_apper_in_factor=countAppear;
+                hiddenAncestor.get(j).length_in_all_factors =countAppear;
             }
-            hiddenAncestor.sort((p1, p2) -> Integer.compare(p1.num_apper_in_factor,p2.num_apper_in_factor));
+            hiddenAncestor.sort((p1, p2) -> Integer.compare(p1.length_in_all_factors,p2.length_in_all_factors));
 
 
         return hiddenAncestor;
@@ -204,9 +212,9 @@ public class BaseNet {
      * @param factor
      * @param hidden
      * @param toReturn
-     * @return
+     * @return updates the number of connection operations
      */
-    public Factor eliminatHidden(Factor factor, EventNode hidden, double[] toReturn) {
+    public Factor eliminateHidden(Factor factor, EventNode hidden, double[] toReturn) {
         int len = factor.factor.length/hidden.getOutcomesSize();
         double [] newFactor = new double[len];
         ArrayList<String> newFactorName = new ArrayList<>();
@@ -239,7 +247,7 @@ public class BaseNet {
                 index++;
                 for (int j = 0; j < hidden.getOutcomesSize(); j++) {
                     newFactor[index] += getTA(factor,options[b+i+(j*jumps)]);
-                    toReturn[1]++;
+                    toReturn[1]++; // a connection operations
                 }
             }
         }
@@ -312,7 +320,7 @@ public class BaseNet {
      * joins two factors in to one which his the nodes are a union of the both nomads in the two factors.
      * @param factor1
      * @param factor2
-     * @param toReturn
+     * @param toReturn updates the number of multiplications.
      * @return
      */
     public Factor join (Factor factor1,Factor factor2,double[] toReturn) {
@@ -323,7 +331,6 @@ public class BaseNet {
             allNodesForJoin.add(hashValue(factor1.factor_name.get(i)));
             factor_name.add(hashValue(factor1.factor_name.get(i)).name);
         }
-
         boolean b ;
         for (int i = 0; i < factor2.factor_name.size(); i++) {
             b = true;
@@ -378,14 +385,13 @@ public class BaseNet {
                 }
             }
             NewFactor[i] = (getTA(factor1,componentsF1,nodesF1)) * (getTA(factor2,componentsF2,nodesF2));
-            toReturn[2]++;
+            toReturn[2]++; // add multiplication
         }
         Factor joined = new Factor(factor_name,NewFactor,this);
 
 
         return joined;
     }
-
     /**
      *
      * @param factor the factor to get a certain cell from.
@@ -426,7 +432,7 @@ public class BaseNet {
      * @param factors
      * @return
      */
-    public ArrayList<Factor> cerateArrFactorsForHidden(EventNode hidden,ArrayList<Factor>factors){
+    public ArrayList<Factor> createArrFactorsForHidden(EventNode hidden, ArrayList<Factor>factors){
         ArrayList<Factor> factorEvent = new ArrayList<>()  ;
         for (int i=0; i<factors.size();i++){
             for (int j=0;j<factors.get(i).factor_name.size();j++){
@@ -482,8 +488,6 @@ public class BaseNet {
      * creates a factor for each EventNode
      * @param nodes
      * @return ArrayList of all Factors in the net
-     *
-     *
      */
     public ArrayList<Factor> createAllFactors(ArrayList<EventNode> nodes){
         ArrayList<Factor> factors = new ArrayList();
@@ -492,15 +496,12 @@ public class BaseNet {
         }
         return factors;
     }
-
-
     /**
      * @param allNodes - all nods in the Bayesian network
      * @param allComponents - the components(values) that we are checking
      * @return arr[0] is the answer to the question P(A,B,C,-D-E)
      *         arr[1] number of multiplications
      */
-
     public double [] calc (ArrayList<EventNode> allNodes,ArrayList<Integer> allComponents) {
         double [] toReturn = new double [2];
         double ans =1;
@@ -524,7 +525,7 @@ public class BaseNet {
             }
             double tableTA = (allNodes.get(i).getCptTable())[row][colum];
             ans = ans *tableTA ;
-            numMultiplications++;
+            numMultiplications++; // updates the number of multiplications
         }
         toReturn[0] = ans;
         toReturn[1]+= numMultiplications-1 ;
@@ -579,11 +580,11 @@ public class BaseNet {
         // putting data in the matrix
         int jumps = NumOfOptions;
         for (int i=0; i<hidden.size(); i++){
-            int numOutcoms = hidden.get(i).getOutcomes().size();
-            jumps = jumps/ numOutcoms;
+            int numOutcomes = hidden.get(i).getOutcomes().size();
+            jumps = jumps/ numOutcomes;
             int input = 0;
             for ( int j=0;j<NumOfOptions;j++){
-                input = (j/ jumps)%numOutcoms ;
+                input = (j/ jumps)%numOutcomes ;
                 arr_options[j][i] = input;
             }
         }
@@ -607,14 +608,14 @@ public class BaseNet {
      * @return
      */
     public ArrayList<Integer> appendComponents(ArrayList<Integer> components, int[] option) {
-        ArrayList<Integer> allcomponents = new ArrayList<>();
+        ArrayList<Integer> allComponents = new ArrayList<>();
         for (int i=0 ; i<components.size();i++){
-            allcomponents.add(components.get(i));
+            allComponents.add(components.get(i));
         }
         for (int i=0 ; i<option.length;i++){
-            allcomponents.add(option[i]);
+            allComponents.add(option[i]);
         }
-        return allcomponents;
+        return allComponents;
     }
 
     /**
@@ -633,7 +634,6 @@ public class BaseNet {
         }
         return appendNodes;
     }
-
     /**
      * @param hidden
      * @return a matrix in which each row represents the components of each node in a certain factor,
@@ -645,11 +645,11 @@ public class BaseNet {
         // putting data in the matrix
         int jumps = NumOfOptions;
         for (int i = 0; i < hidden.size(); i++) {
-            int numOutcoms = hidden.get(i).getOutcomes().size();
-            jumps = jumps / numOutcoms;
+            int numOutcomes = hidden.get(i).getOutcomes().size();
+            jumps = jumps / numOutcomes;
             int input = 0;
             for (int j = 0; j < NumOfOptions; j++) {
-                input = (j / jumps) % numOutcoms;
+                input = (j / jumps) % numOutcomes;
                 arr_options[j][i] = input;
             }
         }

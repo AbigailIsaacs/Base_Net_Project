@@ -59,7 +59,8 @@ public class Factor {
     }
 
     /**
-     * eliminates an evidence from a certain factor
+     * eliminates an evidence variable from a certain factor
+     *
      * @param evidence
      * @param component
      * @return
@@ -67,7 +68,6 @@ public class Factor {
     public double[] eliminateEvidence(EventNode evidence, int component){
 
         int rows = this.factor.length/evidence.getOutcomesSize();
-        // if rows =1 then null
         double [] newFactor = new double[rows];
         int jumps = this.factor.length;
         for (int i=0;i<factor_name.size();i++){

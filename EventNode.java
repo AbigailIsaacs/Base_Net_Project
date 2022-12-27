@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashMap;
 
 /**
@@ -17,7 +15,7 @@ public class EventNode {
     ArrayList<EventNode> parents ;
     ArrayList<Double> CPT;
     double cptTable[][];
-    int num_apper_in_factor;
+    int length_in_all_factors;
 
     /**
      * constructor
@@ -27,11 +25,10 @@ public class EventNode {
         parents = new ArrayList<>();
         CPT = new ArrayList<>();
         outcomes = new HashMap<String, Integer>();
-        num_apper_in_factor =0;
+        length_in_all_factors =0;
     }
 
     /**
-     *
      * @param key
      * @return the value of the outcome (for example {T=0} {F=1} {V3=2})
      */
@@ -48,9 +45,7 @@ public class EventNode {
 
     public HashMap<String, Integer> getOutcomes() {
         return outcomes;
-
     }
-
     public int getOutcomesSize(){
         return outcomes.size();
     }
@@ -80,11 +75,11 @@ public class EventNode {
      */
     public double [][] createCPT() {
         int numOfColumns = outcomes.size();
-        int numOfRowes = 1;
+        int numOfRows = 1;
         for (int i=0; i<parents.size(); i++) {
-            numOfRowes =numOfRowes *(parents.get(i).getOutcomesSize());
+            numOfRows =numOfRows *(parents.get(i).getOutcomesSize());
         }
-        double [][] cpt = new double[numOfRowes][numOfColumns];
+        double [][] cpt = new double[numOfRows][numOfColumns];
         int index = 0;
             for (int i = 0 ; i< cpt.length; i++){
                 for (int j=0; j< cpt[0].length;j++){

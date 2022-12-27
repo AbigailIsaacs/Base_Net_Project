@@ -9,19 +9,19 @@ public class Ex1 {
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
         PrintWriter out = new PrintWriter("output.txt");
         BufferedReader br
-                = new BufferedReader(new FileReader("input"));
+                = new BufferedReader(new FileReader("input.txt"));
         String XML_name = br.readLine();
-        ArrayList<String> allQuerys = new ArrayList<>(); //string arraylist for all Querys
+        ArrayList<String> allQueries = new ArrayList<>(); //string arraylist for all Querys
         String query = br.readLine();
         while (query !=null) {
-            allQuerys.add(query);
+            allQueries.add(query);
             query = br.readLine();
         }
         BaseNet B = new BaseNet (XML_name); // baseNet new object
-        for (int k=0;k<allQuerys.size();k++){ // goes thru all Query's
+        for (int k=0;k<allQueries.size();k++){ // goes thru all Query's
             ArrayList<EventNode> query_and_evidence = new ArrayList<>();
             ArrayList<Integer> components =new ArrayList<>();
-            String queries = allQuerys.get(k);
+            String queries = allQueries.get(k);
             char numFunction = queries.charAt(queries.length()-1); // brings the number of function
             queries = queries.substring(0,queries.length()-3); // cuts the three last unnesesery notes
             queries= queries.replace("P","");
@@ -38,13 +38,24 @@ public class Ex1 {
                     if(B.getEvents().get(i).getName().equals(name_node))
                     {
                         query_and_evidence.add(B.getEvents().get(i)); // adds the node to an array list of event nods
-                        String StringtoAdd = pear[1]; // the component
-                        int toAdd = B.getEvents().get(i).hashValue(StringtoAdd); //gets the value of the component (T=0 F=1 V3=2..)
+                        String StringToAdd = pear[1]; // the component
+                        int toAdd = B.getEvents().get(i).hashValue(StringToAdd); //gets the value of the component (T=0 F=1 V3=2..)
                         components.add(toAdd); //adds the component in an arraylist at the same index that the node is in
                         break;
                     }
                 }
             }
+            /**
+             * for numFunction =2 -
+             * The elimination order of the variables is according to the ABC order
+             * for numFunction =3 -
+             * The elimination of the variables is according to the total lengths of the factors in which
+             * the variable is found, from the smallest to the largest.
+             * In addition, when we reach a situation where all the tables in which the variable appears in
+             * consist only the variable itself, we can move on to the next variable because this means
+             * that the variable does not depend on the query variable.
+             */
+
             if(numFunction=='2'|| numFunction=='3') {
                 if(isInTable(query_and_evidence)){ // if the answer to the question is already in the table
                     double [] ans = new double[3];
