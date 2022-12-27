@@ -6,12 +6,14 @@ public class Factor {
     double factor [];
     ArrayList<String>  factor_name;
     BaseNet baseNet ;
+    int asciiSum;
 
 
     public Factor(EventNode event, BaseNet baseNet){
         factor = createFactor(event);
         factor_name = createFactorName(event);
         this.baseNet =baseNet;
+        asciiSum =0;
 
     }
 

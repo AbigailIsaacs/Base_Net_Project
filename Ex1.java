@@ -11,7 +11,7 @@ public class Ex1 {
         BufferedReader br
                 = new BufferedReader(new FileReader("input.txt"));
         String XML_name = br.readLine();
-        ArrayList<String> allQueries = new ArrayList<>(); //string arraylist for all Querys
+        ArrayList<String> allQueries = new ArrayList<>(); //string arraylist for all Queries
         String query = br.readLine();
         while (query !=null) {
             allQueries.add(query);

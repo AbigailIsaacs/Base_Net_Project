@@ -90,9 +90,9 @@ public class BaseNet {
      * for "numFunction" =3 -
      * The elimination of the variables is according to the total lengths of the factors in which
      * the variable is found, from the smallest to the largest.
-     * In addition, when we reach a situation where all the tables in which the variable appears in
-     * consist only the variable itself, we can move on to the next variable because this means
-     * that the variable does not depend on the query variable.
+     * In addition, when we reach a situation where all the factors in which the variable appears in
+     * consist only the variable itself, we ignore him can move on to the next variable
+     * (Since we learned in class that it does not affect the result).
      *
      * @param query_and_evidence
      * @param components
@@ -117,12 +117,14 @@ public class BaseNet {
         }
         if(function==3){
             hiddenAncestor.sort((p1, p2) -> p1.getName().compareTo(p2.getName()));
+
             hiddenAncestor = appearsTheLeast(factors,hiddenAncestor);
         }
 
         for (int i=0; i<hiddenAncestor.size();i++){
             //creating an Array list of the factors that contains the event hiddenAncestor.get(i)
             ArrayList<Factor> factorEvent = createArrFactorsForHidden(hiddenAncestor.get(i),factors);
+            factorEvent = asciiSort(factorEvent);
             Collections.sort(factorEvent, Comparator.comparingInt(p -> p.getFactor().length));
             if(function==3){
                 // in case that all the factors in factorEvent are consists only the Hidden event,
@@ -145,6 +147,7 @@ public class BaseNet {
                 if(joined.factor.length!=1) { // if the new factor is only one line we can delete it
                     factorEvent.add(joined);
                 }
+                factorEvent = asciiSort(factorEvent);
                 Collections.sort(factorEvent, Comparator.comparingInt(p -> p.getFactor().length));
             }
 
@@ -156,12 +159,14 @@ public class BaseNet {
             }
        }
         // now we are left only with the factors of the query
+        factors = asciiSort(factors);
         Collections.sort(factors, Comparator.comparingInt(p -> p.getFactor().length));
         while (factors.size()>=2){
             Factor joined= join(factors.get(0),factors.get(1),toReturn);
             factors.remove(0);
             factors.remove(0);
             factors.add(joined);
+            factors = asciiSort(factors);
             Collections.sort(factors, Comparator.comparingInt(p -> p.getFactor().length));
         }
         // now we are left with one factor
@@ -181,6 +186,24 @@ public class BaseNet {
         }
         toReturn[0] = correctComponent/sum;
         return toReturn;
+    }
+
+    /**
+     * sorts the factors by tha ascii sum of his name
+     * @param factorEvent
+     * @return
+     */
+    public ArrayList<Factor> asciiSort (ArrayList<Factor> factorEvent){
+        int sum=0;
+        for (int j = 0; j < factorEvent.size(); j++) {
+            sum=0;
+            for (int k = 0; k < factorEvent.get(j).factor_name.size(); k++) {
+                sum+=factorEvent.get(j).factor_name.get(k).charAt(0);
+            }
+            factorEvent.get(j).asciiSum = sum;
+        }
+        factorEvent.sort((p1, p2) -> Integer.compare(p1.asciiSum,p2.asciiSum));
+        return factorEvent;
     }
 
     /**
@@ -443,8 +466,8 @@ public class BaseNet {
                     break;
                 }
             }
-
         }
+        factorEvent = asciiSort(factorEvent);
         Collections.sort(factorEvent, Comparator.comparingInt(p -> p.getFactor().length));
         return factorEvent;
     }
